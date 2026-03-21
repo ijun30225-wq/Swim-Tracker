@@ -1,0 +1,23 @@
+# Build artifacts
+.pio/
+.pioenvs/
+.piolibdeps/
+build/
+*.o
+*.elf
+*.bin
+*.hex
+*.map
+
+# Arduino IDE
+*.bak
+
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# Data files (raw logs — add selectively)
+data/*.csv
+data/*.log

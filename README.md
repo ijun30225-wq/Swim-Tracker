@@ -19,12 +19,12 @@ A wearable swim tracking system built from scratch — collecting real-time moti
 
 | Area | Status |
 |---|---|
-| I2C IMU Communication | 🟡 In Progress |
-| Stable Sensor Readings | 🔴 Debugging |
+| I2C IMU Communication | ✅ Working |
+| Stable Sensor Readings | ✅ Working |
+| Python Visualization | 🟡 In Progress |
 | Data Logging | 🔴 Not Started |
 | Motion Analysis | 🔴 Not Started |
 | Waterproof Enclosure | 🔴 Not Started |
-| Mobile App / Visualization | 🔴 Not Started |
 
 ---
 
@@ -40,7 +40,14 @@ A wearable swim tracking system built from scratch — collecting real-time moti
 
 ### Wiring
 
-> *Schematic / wiring diagram — coming soon.*
+| ESP32 Pin | ICM-20948 Pin |
+|---|---|
+| GPIO 4 | SDA |
+| GPIO 5 | SCL |
+| 3.3V | VCC |
+| GND | GND |
+
+Note: 5.1kΩ pull-up resistors on SDA and SCL to 3.3V. Header pins must be soldered to breakout board.
 
 ---
 
@@ -119,9 +126,11 @@ See [`src/main.cpp`](src/main.cpp) for the current working sketch.
 
 ```
 swim-tracker/
-├── src/              # Firmware / embedded code
+├── src/              # Firmware and Python scripts
+│   ├── main.cpp      # ESP32 Arduino sketch
+│   └── visualizer.py # Real-time Python visualizer
 ├── docs/             # Notes, debugging logs, research
-├── hardware/         # Schematics, PCB files, BOM
+├── hardware/         # Schematics, wiring diagrams
 ├── data/             # Sample captured data (CSV, logs)
 └── README.md
 ```
@@ -132,6 +141,8 @@ swim-tracker/
 
 - Embedded systems debugging
 - I2C sensor interfacing
+- Soldering and hardware reliability
+- Real-time data visualization with Python
 - Hardware reliability & design tradeoffs
 - Signal processing fundamentals *(upcoming)*
 - PCB design *(upcoming)*

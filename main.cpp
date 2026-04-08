@@ -1,43 +1,37 @@
-/**
- * swim-tracker / main.cpp
- *
- * Initial IMU communication over I2C using the ICM-20948.
- * Status: Partial — communication established but unstable (crashes after short runtime).
- *
- * Board:  ESP32
- * IDE:    Arduino IDE
- *
- * ESP32 default I2C pins:
- *   SDA → GPIO 21
- *   SCL → GPIO 22
- *
- * Author: Jun (@ijun30225)
- */
+#include <Wire.h>
+#include <Adafruit_ICM20948.h>
+#include <Adafruit_Sensor.h>
 
-#include <Adafruit_I2CDevice.h>
-
-#define I2C_ADDRESS 0x68  // ICM-20948 default I2C address (AD0 low)
-
-Adafruit_I2CDevice i2c_dev = Adafruit_I2CDevice(I2C_ADDRESS);
+Adafruit_ICM20948 icm;
 
 void setup() {
   Serial.begin(115200);
-  while (!Serial) delay(10);
+  delay(1000);
 
-  Serial.println("Swim Tracker — IMU Init");
+  Wire.begin(4, 5); // SDA=4, SCL=5
 
-  if (!i2c_dev.begin()) {
-    Serial.println("ERROR: Could not find IMU at address 0x68. Check wiring.");
+  if (!icm.begin_I2C(0x68)) {
+    Serial.println("Failed to find ICM20948");
     while (1);
   }
 
-  Serial.println("IMU found! Beginning communication...");
+  Serial.println("ICM20948 ready");
+  Serial.println("ax,ay,az,gx,gy,gz");
 }
 
 void loop() {
-  // TODO: Read accelerometer and gyroscope registers
-  // TODO: Parse raw data into usable values
-  // TODO: Detect strokes, laps, and turns
+  sensors_event_t accel, gyro, temp;
+  icm.getEvent(&accel, &gyro, &temp);
 
-  delay(100);
+  // Acceleration in m/s^2
+  Serial.print(accel.acceleration.x); Serial.print(",");
+  Serial.print(accel.acceleration.y); Serial.print(",");
+  Serial.print(accel.acceleration.z); Serial.print(",");
+
+  // Gyro in rad/s
+  Serial.print(gyro.gyro.x); Serial.print(",");
+  Serial.print(gyro.gyro.y); Serial.print(",");
+  Serial.println(gyro.gyro.z);
+
+  delay(25);
 }

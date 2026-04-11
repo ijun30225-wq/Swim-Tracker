@@ -1,17 +1,17 @@
-# 🏊 Swim Tracker
+# Swim Tracker
 
-A wearable swim tracking system built from scratch — collecting real-time motion and orientation data to analyze swim performance.
+A wearable swim tracking system built from scratch — collecting real-time motion data from an IMU sensor to eventually analyze swim performance.
 
-> Personal engineering project by Jun — ECE student learning embedded systems, sensor interfacing, and signal processing through building.
+Personal engineering project. ECE student learning embedded systems, sensor interfacing, and signal processing by building something real.
 
 ---
 
 ## Project Goals
 
-- Build a **waterproof wearable device** for swimmers
-- Track motion using an **IMU sensor** (accelerometer + gyroscope)
-- Process and interpret swim data
-- Extract meaningful metrics: stroke count, lap detection, and efficiency scores
+- Build a waterproof wearable for swimmers
+- Track motion with a 9-axis IMU (accelerometer + gyroscope + magnetometer)
+- Visualize and log sensor data in real time
+- Extract swim metrics: stroke count, lap detection, efficiency scoring
 
 ---
 
@@ -19,24 +19,28 @@ A wearable swim tracking system built from scratch — collecting real-time moti
 
 | Area | Status |
 |---|---|
-| I2C IMU Communication | ✅ Working |
-| Stable Sensor Readings | ✅ Working |
-| Python Visualization | 🟡 In Progress |
-| Data Logging | 🔴 Not Started |
-| Motion Analysis | 🔴 Not Started |
-| Waterproof Enclosure | 🔴 Not Started |
+| I2C IMU communication | Working |
+| Stable sensor readings | Working |
+| Python live visualization | Working |
+| CSV data logging | Working |
+| Sensor fusion (orientation) | Not started |
+| 3D browser visualization | Not started |
+| Motion / stroke analysis | Not started |
+| Waterproof enclosure | Not started |
 
 ---
 
 ## Hardware
 
-| Component | Details |
+| Component | Detail |
 |---|---|
-| IMU Sensor | ICM-20948 (6-axis accel + gyro) |
-| Microcontroller | ESP32 |
-| Communication | I2C |
-| I2C Address | `0x68` (default) |
-| IDE | Arduino IDE |
+| Microcontroller | ESP32 Dev Module |
+| IMU | ICM-20948 (accel + gyro + magnetometer, 9-axis) |
+| Interface | I2C |
+| I2C Address | `0x68` |
+| Pull-up resistors | 5.1kΩ on SDA and SCL to 3.3V |
+
+See [`Bom.md`](Bom.md) for the full parts list.
 
 ### Wiring
 
@@ -47,78 +51,81 @@ A wearable swim tracking system built from scratch — collecting real-time moti
 | 3.3V | VCC |
 | GND | GND |
 
-Note: 5.1kΩ pull-up resistors on SDA and SCL to 3.3V. Header pins must be soldered to breakout board.
-
 ---
 
 ## Software
 
 ### Dependencies
 
-- [`Adafruit_BusIO`](https://github.com/adafruit/Adafruit_BusIO) — for `Adafruit_I2CDevice`
+- [`Adafruit ICM20948`](https://github.com/adafruit/Adafruit_ICM20X) — IMU driver
+- [`Adafruit BusIO`](https://github.com/adafruit/Adafruit_BusIO) — I2C abstraction layer
 
-Install via **Arduino IDE → Tools → Manage Libraries → search "Adafruit BusIO"**.
+Install both via **Arduino IDE → Tools → Manage Libraries**.
+
+Python dependencies:
+
+```bash
+pip install pyserial matplotlib pandas
+```
 
 ### Getting Started
 
-1. Clone this repo:
+1. Clone the repo:
    ```bash
    git clone https://github.com/ijun30225/swim-tracker.git
    cd swim-tracker
    ```
 
-2. Open `src/main.cpp` in Arduino IDE
+2. Open `main.cpp` in Arduino IDE
 
-3. Install the `Adafruit BusIO` library via Library Manager
+3. Install the two Arduino libraries above via Library Manager
 
-4. Select board: **ESP32 Dev Module** (or your specific ESP32 variant)  
-   *(Tools → Board → ESP32 Arduino → ESP32 Dev Module)*
+4. Select board: **ESP32 Dev Module** (Tools → Board → ESP32 Arduino)
 
-5. Select the correct COM port and click **Upload**
+5. Select your COM port and click Upload
 
-6. Open **Serial Monitor** at `115200` baud
+6. To view raw data: open Serial Monitor at `115200` baud
 
-### Current Code
-
-See [`src/main.cpp`](src/main.cpp) for the current working sketch.
+7. To run the Python visualizer, **close Serial Monitor first**, then:
+   ```bash
+   cd src
+   python visualizer.py
+   ```
+   Update the `PORT` variable in `visualizer.py` to match your system.
 
 ---
 
-## Challenges & Debugging Log
+## How It Works
 
-### IMU Instability
-- Communication works briefly then crashes
-- Investigating: wiring integrity, power supply noise, I2C pull-up resistors
-- See [`docs/debugging.md`](docs/debugging.md) for running notes
+The ESP32 reads all 9 sensor axes from the ICM20948 over I2C and streams them as space-separated values over USB serial at 50Hz:
 
-### Hardware Reliability
-- Current breadboard setup is not robust enough for in-water use
-- Next step: solder connections → evaluate custom PCB design
+```
+ax ay az gx gy gz mx my mz
+```
 
-### Waterproofing *(future)*
-- Will need a fully sealed enclosure
-- Must preserve signal accuracy and sensor calibration
+The Python visualizer reads that stream, plots it live in a rolling window, and saves everything to a CSV on close. See [`Debugging.md`](Debugging.md) for issues encountered and how they were resolved.
 
 ---
 
 ## Roadmap
 
-### Short Term
-- [ ] Fix IMU crash / I2C instability
-- [ ] Confirm stable, continuous sensor reads
-- [ ] Solder connections for reliability
+**Short term**
+- [x] I2C communication with ICM20948
+- [x] Stable 50Hz data stream
+- [x] Live Python visualization
+- [x] CSV data logging
+- [ ] Solder connections for physical reliability
 
-### Medium Term
-- [ ] Log real accelerometer + gyro data
-- [ ] Begin identifying swim-specific motion patterns
-- [ ] Prototype basic stroke detection algorithm
+**Medium term**
+- [ ] Sensor fusion filter (Madgwick/Mahony) to compute orientation
+- [ ] 3D browser visualization (Flask + WebSocket + Three.js)
+- [ ] Basic stroke detection from motion patterns
 
-### Long Term
-- [ ] Compact wearable form factor
-- [ ] Stroke detection & lap counting
-- [ ] Performance metrics + efficiency scoring
-- [ ] Bluetooth data transmission
-- [ ] Mobile app integration
+**Long term**
+- [ ] Lap counting and performance metrics
+- [ ] Wireless streaming over BLE
+- [ ] Compact waterproof enclosure
+- [ ] Mobile app
 
 ---
 
@@ -126,31 +133,18 @@ See [`src/main.cpp`](src/main.cpp) for the current working sketch.
 
 ```
 swim-tracker/
-├── src/              # Firmware and Python scripts
-│   ├── main.cpp      # ESP32 Arduino sketch
-│   └── visualizer.py # Real-time Python visualizer
-├── docs/             # Notes, debugging logs, research
-├── hardware/         # Schematics, wiring diagrams
-├── data/             # Sample captured data (CSV, logs)
+├── src/
+│   └── visualizer.py     # Real-time Python visualizer + CSV logger
+├── main.cpp              # ESP32 firmware (Arduino IDE)
+├── Bom.md                # Bill of materials
+├── Debugging.md          # Running log of issues and fixes
+├── .gitignore
 └── README.md
 ```
 
 ---
 
-## What I'm Learning
-
-- Embedded systems debugging
-- I2C sensor interfacing
-- Soldering and hardware reliability
-- Real-time data visualization with Python
-- Hardware reliability & design tradeoffs
-- Signal processing fundamentals *(upcoming)*
-- PCB design *(upcoming)*
-
----
-
 ## Author
 
-**Jun** — Electrical & Computer Systems Engineering student  
-GitHub: [@ijun30225](https://github.com/ijun30225)  
-Building this to learn through doing. Contributions, suggestions, and feedback welcome.
+**Jun Iguchi** — Electrical & Computer Systems Engineering, RPI  
+GitHub: [@ijun30225](https://github.com/ijun30225)

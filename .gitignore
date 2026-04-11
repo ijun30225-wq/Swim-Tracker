@@ -1,23 +1,22 @@
-# Build artifacts
-.pio/
-.pioenvs/
-.piolibdeps/
-build/
-*.o
-*.elf
-*.bin
-*.hex
-*.map
+# Python
+__pycache__/
+*.py[cod]
+.env
+venv/
+.venv/
 
-# Arduino IDE
-*.bak
+# CSV logs (generated at runtime)
+imu_log_*.csv
 
 # macOS
 .DS_Store
 
-# VS Code
-.vscode/
+# Arduino build artifacts
+build/
+*.elf
+*.bin
+*.map
 
-# Data files (raw logs — add selectively)
-data/*.csv
-data/*.log
+# IDE
+.vscode/
+.idea/

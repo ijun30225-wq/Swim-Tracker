@@ -1,12 +1,32 @@
-# Bill of Materials (BOM)
+# Bill of Materials
 
-| # | Component | Part / Model | Qty | Notes |
-|---|---|---|---|---|
-| 1 | IMU Sensor | ICM-20948 | 1 | 6-axis accel + gyro, I2C |
-| 2 | Microcontroller | ESP32 | 1 | Arduino IDE, built-in WiFi/BT |
-| 3 | I2C Pull-up Resistors | 4.7kΩ | 2 | One per SDA/SCL line |
-| 4 | Decoupling Capacitor | 100nF | 1 | Near IMU VCC pin |
-| 5 | Power Source | TBD | 1 | Battery / LiPo |
-| 6 | Waterproof Enclosure | TBD | 1 | Future milestone |
+Components used in the current prototype.
 
-> Update this table as the hardware evolves.
+| Component | Part | Notes |
+|-----------|------|-------|
+| Microcontroller | ESP32 Dev Module | USB-C variant preferred |
+| IMU | ICM-20948 breakout | 9-axis: accel + gyro + mag |
+| Resistors | 5.1kΩ x2 | Pull-ups on SDA and SCL to 3.3V |
+| Breadboard | Full-size | For prototyping only — not for water use |
+| Jumper wires | M-M | Enough for I2C (4 wires) |
+| USB cable | USB-A to USB-C | For flashing and serial data |
+
+---
+
+## Notes
+
+- The ICM-20948 breakout board requires header pins to be soldered before use.
+- Breadboard connections are not reliable for any physical activity — solder before testing on the body.
+- The ESP32's 3.3V pin supplies the ICM20948. Do not use 5V — it will damage the sensor.
+- Pull-up resistors are required for I2C stability. Without them, the bus floats and behavior is unpredictable.
+
+---
+
+## Future / Planned Components
+
+| Component | Purpose |
+|-----------|---------|
+| LiPo battery + charger | Wireless operation |
+| Waterproof enclosure | In-water use |
+| Custom PCB | Replace breadboard, reduce size |
+| BLE module (built into ESP32) | Wireless data streaming |

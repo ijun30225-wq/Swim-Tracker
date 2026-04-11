@@ -1,34 +1,54 @@
 # Debugging Log
 
-Running notes on issues encountered and steps taken to resolve them.
+Running notes on issues hit during development and how they were resolved.
 
 ---
 
-## Issue 1 — IMU Crash / I2C Instability
+## [Resolved] ICM20948 returning zero values for magnetometer
 
-**Date:** *(fill in)*  
-**Status:** 🔴 Open
+**Symptom:** Accel and gyro data looked correct in Serial Monitor, but mx/my/mz were always 0.
 
-### Symptoms
-- I2C communication initializes successfully
-- Valid data received for a short period
-- System crashes after a short runtime
+**Cause:** The ICM20948 contains two separate chips: the main IMU (accel + gyro) and a magnetometer chip called the AK09916. They communicate over their own internal I2C bus. The main chip initializes quickly; the AK09916 takes longer to come online.
 
-### Hypotheses
-- [ ] Loose wiring / poor contact on breadboard
-- [ ] Insufficient or noisy power supply (ESP32 3.3V rail drooping under load)
-- [ ] Missing or incorrectly valued I2C pull-up resistors (4.7kΩ recommended)
-- [ ] I2C clock speed too high — try reducing to 100kHz (`Wire.setClock(100000)`)
-- [ ] Wrong I2C pins — ESP32 defaults are SDA=GPIO21, SCL=GPIO22
-- [ ] IMU register bank not selected correctly (ICM-20948 uses bank switching)
-- [ ] Watchdog timer reset — ESP32 WDT fires if loop() blocks too long
-
-### Steps Taken
-- *(Document what you've tried here)*
-
-### Resolution
-- *(Fill in once solved)*
+**Fix:** Added `delay(500)` after `icm.begin_I2C()` before the main loop starts. This gives the magnetometer enough time to wake up.
 
 ---
 
-*Add new issues below as they come up.*
+## [Resolved] Python visualizer showing all zeros, then sudden data spike
+
+**Symptom:** The live plot was flat at zero for most of the session, then real data appeared suddenly near the end of the window.
+
+**Cause:** Arduino Serial Monitor and the Python script were both trying to use the same serial port. The OS only allows one program to hold a serial port at a time. Serial Monitor had it locked, so Python was getting nothing. When Serial Monitor was closed, Python finally received data — but by then, the serial buffer had a large backlog that dumped all at once.
+
+**Fix:** Close Serial Monitor completely before running `visualizer.py`. They are mutually exclusive.
+
+---
+
+## [Resolved] Serial buffer backlog at 100Hz
+
+**Symptom:** Even without the Serial Monitor conflict, data appeared delayed and inconsistent. The plot looked choppy.
+
+**Cause:** The Arduino was sending data at 100Hz (10ms delay). Python's plot redraw takes non-trivial time, so it couldn't keep up. The serial buffer accumulated a backlog faster than Python could drain it.
+
+**Fix:** Slowed the Arduino loop to 50Hz (`delay(20)`). The Python script already drains the full buffer each iteration, so 50Hz is smooth and there's no buildup.
+
+---
+
+## [Resolved] I2C instability / sensor crashing
+
+**Symptom:** Sensor would communicate briefly then stop responding or produce garbage values.
+
+**Cause:** I2C lines need pull-up resistors to 3.3V. Without them, the bus floats and behavior is unreliable — especially as wire lengths increase or the sensor moves.
+
+**Fix:** Added 5.1kΩ pull-up resistors on both SDA and SCL lines to 3.3V. Stable ever since.
+
+---
+
+## [Open] Breadboard reliability for in-water use
+
+**Issue:** Breadboard connections work fine on the bench but would not survive submersion or physical stress from swimming.
+
+**Plan:**
+- Solder all connections to perfboard or a custom PCB
+- Evaluate conformal coating or silicone enclosure for waterproofing
+- Test physical durability before any in-water trials
